@@ -5,31 +5,54 @@
 #include <unistd.h>
 
 int main() {
-    pid_t child_pid;
-
-    // Create a child process
-    child_pid = fork();
-
-    if (child_pid < 0) {
-        // Fork failed
-        perror("Fork failed");
-        exit(EXIT_FAILURE);
-    } else if (child_pid == 0) {
+    pid_t pid;
+    int status;
+    printf("Starting main program...\n");
+    
+    // Fork a child process
+    pid = fork();
+    
+    if (pid < 0) {
+        fprintf(stderr, "Fork failed\n");
+        return 1;
+    } else if (pid == 0) {
         // Child process
-        printf("Child process with PID: %d\n", getpid());
-        // Execute a new program (replace "ls" with any other command)
+        printf("Child process executing...\n");
+        
+        // Executing a command using execl
         execl("/bin/ls", "ls", "-l", NULL);
+        
         // This line will only be reached if execl fails
-        perror("Exec failed");
+        perror("execl");
         exit(EXIT_FAILURE);
     } else {
         // Parent process
-        printf("Parent process with PID: %d\n", getpid());
-        printf("Waiting for child process to finish...\n");
-        wait(NULL); // Wait for the child to terminate
-        printf("Child process finished\n");
+        printf("Parent process waiting for child...\n");
+        
+        // Wait for the child process to finish
+        wait(&status);
+        
+        if (WIFEXITED(status)) {
+            printf("Child process terminated with status: %d\n", WEXITSTATUS(status));
+        } else {
+            printf("Child process terminated abnormally\n");
+        }
+                printf("Parent process exiting...\n");
     }
-
-    printf("Exiting...\n");
     return 0;
 }
+
+OUTPUT
+opera@opera-virtual-machine:~/Desktop$ gcc -o a p1.c
+opera@opera-virtual-machine:~/Desktop$ ./a
+Starting main program...
+Parent process waiting for child...
+Child process executing...
+total 20
+-rwxrwxr-x 1 opera opera 16344 Nov 27 00:50 a
+-rw-rw-r-- 1 opera opera  1109 Nov 27 00:35 p1.c
+Child process terminated with status: 0
+Parent process exiting...
+opera@opera-virtual-machine:~/Desktop$ 
+
+
