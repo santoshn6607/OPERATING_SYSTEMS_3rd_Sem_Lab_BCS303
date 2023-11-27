@@ -42,7 +42,7 @@ int main() {
     return 0;
 }
 
-OUTPUT
+*********************************OUTPUT******************************************
 opera@opera-virtual-machine:~/Desktop$ gcc -o a p1.c
 opera@opera-virtual-machine:~/Desktop$ ./a
 Starting main program...
