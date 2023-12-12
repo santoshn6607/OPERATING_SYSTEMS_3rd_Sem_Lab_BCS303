@@ -1,0 +1,59 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <string.h>
+
+#define FIFO_NAME "myfifo"
+
+void writerProcess() {
+    int fd;
+    char *message = "Hello, reader!";
+
+    mkfifo(FIFO_NAME, 0666);
+    fd = open(FIFO_NAME, O_WRONLY);
+    write(fd, message, strlen(message) + 1);
+    close(fd);
+
+    printf("Data sent to reader successfully!\n");
+}
+
+void readerProcess() {
+    int fd;
+    char readMessage[100];
+
+    fd = open(FIFO_NAME, O_RDONLY);
+    read(fd, readMessage, sizeof(readMessage));
+    printf("Received message: %s\n", readMessage);
+    close(fd);
+}
+
+int main() {
+    pid_t pid;
+
+    // Create a child process
+    pid = fork();
+
+    if (pid < 0) {
+        fprintf(stderr, "Fork failed!\n");
+        return 1;
+    } else if (pid > 0) {
+        // Parent process (Writer)
+        writerProcess();
+    } else {
+        // Child process (Reader)
+        readerProcess();
+    }
+
+    return 0;
+}
+
+************************************************************************************
+OUTPUT
+opera@opera-virtual-machine:~/Desktop$ gcc -o 1 1.c
+opera@opera-virtual-machine:~/Desktop$ ./1
+Data sent to reader successfully!
+Received message: Hello, reader!
+opera@opera-virtual-machine:~/Desktop$ 
