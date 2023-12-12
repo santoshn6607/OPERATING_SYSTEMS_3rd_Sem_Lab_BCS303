@@ -1,0 +1,97 @@
+#include <stdio.h>
+#include <pthread.h>
+#include <semaphore.h>
+
+#define BUFFER_SIZE 5
+
+int buffer[BUFFER_SIZE];
+int count = 0;
+int in = 0;
+int out = 0;
+
+sem_t empty;
+sem_t full;
+pthread_mutex_t mutex;
+
+void *producer(void *arg) {
+    int item;
+    for (int i = 0; i < 10; ++i) {
+        item = i + 1; // Producing item
+        sem_wait(&empty);
+        pthread_mutex_lock(&mutex);
+
+        buffer[in] = item;
+        printf("Produced: %d\n", item);
+        in = (in + 1) % BUFFER_SIZE;
+        count++;
+
+        pthread_mutex_unlock(&mutex);
+        sem_post(&full);
+    }
+    pthread_exit(NULL);
+}
+
+void *consumer(void *arg) {
+    int item;
+    for (int i = 0; i < 10; ++i) {
+        sem_wait(&full);
+        pthread_mutex_lock(&mutex);
+
+        item = buffer[out];
+        printf("Consumed: %d\n", item);
+        out = (out + 1) % BUFFER_SIZE;
+        count--;
+
+        pthread_mutex_unlock(&mutex);
+        sem_post(&empty);
+    }
+    pthread_exit(NULL);
+}
+
+int main() {
+    pthread_t producerThread, consumerThread;
+
+    sem_init(&empty, 0, BUFFER_SIZE);
+    sem_init(&full, 0, 0);
+    pthread_mutex_init(&mutex, NULL);
+
+    pthread_create(&producerThread, NULL, producer, NULL);
+    pthread_create(&consumerThread, NULL, consumer, NULL);
+
+    pthread_join(producerThread, NULL);
+    pthread_join(consumerThread, NULL);
+
+    sem_destroy(&empty);
+    sem_destroy(&full);
+    pthread_mutex_destroy(&mutex);
+
+    return 0;
+}
+*******************************************************************************************************
+
+OUTPUT
+
+opera@opera-virtual-machine:~/Desktop$ gcc -o 1 1.c
+opera@opera-virtual-machine:~/Desktop$ ./1
+Produced: 1
+Produced: 2
+Produced: 3
+Produced: 4
+Produced: 5
+Consumed: 1
+Consumed: 2
+Consumed: 3
+Consumed: 4
+Consumed: 5
+Produced: 6
+Produced: 7
+Produced: 8
+Produced: 9
+Produced: 10
+Consumed: 6
+Consumed: 7
+Consumed: 8
+Consumed: 9
+Consumed: 10
+opera@opera-virtual-machine:~/Desktop$ 
+
