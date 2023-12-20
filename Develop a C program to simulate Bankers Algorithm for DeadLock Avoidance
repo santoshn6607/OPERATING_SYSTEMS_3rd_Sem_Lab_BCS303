@@ -1,0 +1,94 @@
+#include <stdio.h>
+
+#define MAX_PROCESSES 10
+#define MAX_RESOURCES 10
+
+int available[MAX_RESOURCES];
+int allocation[MAX_PROCESSES][MAX_RESOURCES];
+int need[MAX_PROCESSES][MAX_RESOURCES];
+int finish[MAX_PROCESSES];
+
+int num_processes, num_resources;
+
+void input_data() {
+    printf("Enter number of processes and resources: ");
+    scanf("%d %d", &num_processes, &num_resources);
+
+    printf("Enter available resources: ");
+    for (int i = 0; i < num_resources; ++i)
+        scanf("%d", &available[i]);
+
+    printf("Enter allocated resources for each process:\n");
+    for (int i = 0; i < num_processes; ++i) {
+        for (int j = 0; j < num_resources; ++j) {
+            scanf("%d", &allocation[i][j]);
+            need[i][j] = allocation[i][j]; // Initialize need array
+        }
+        finish[i] = 0; // Initialize finish array
+    }
+}
+
+int is_safe() {
+    int work[MAX_RESOURCES];
+    for (int i = 0; i < num_resources; ++i)
+        work[i] = available[i];
+
+    int safe_sequence[MAX_PROCESSES];
+    int count = 0;
+
+    while (count < num_processes) {
+        int found = 0;
+        for (int i = 0; i < num_processes; ++i) {
+            if (finish[i] == 0) {
+                int j;
+                for (j = 0; j < num_resources; ++j) {
+                    if (need[i][j] > work[j])
+                        break;
+                }
+                if (j == num_resources) {
+                    for (int k = 0; k < num_resources; ++k)
+                        work[k] += allocation[i][k];
+                    safe_sequence[count++] = i;
+                    finish[i] = 1;
+                    found = 1;
+                }
+            }
+        }
+        if (found == 0) {
+            printf("System is in an unsafe state!\n");
+            return 0;
+        }
+    }
+
+    printf("System is in a safe state.\nSafe sequence is: ");
+    for (int i = 0; i < num_processes - 1; ++i)
+        printf("P%d -> ", safe_sequence[i]);
+    printf("P%d\n", safe_sequence[num_processes - 1]);
+    return 1;
+}
+
+
+***********************************************************
+
+OUTPUT
+
+opera@opera-virtual-machine:~$ cd ~/Desktop
+opera@opera-virtual-machine:~/Desktop$ gcc -o t lab5.c
+opera@opera-virtual-machine:~/Desktop$ ./t
+Enter number of processes and resources: 5 3
+Enter available resources: 3 3 2
+Enter allocated resources for each process:
+0 1 0
+2 0 0
+3 0 2
+2 1 1
+0 0 2
+System is in a safe state.
+Safe sequence is: P0 -> P1 -> P2 -> P3 -> P4
+opera@opera-virtual-machine:~/Desktop$
+
+int main() {
+    input_data();
+    is_safe();
+    return 0;
+}
